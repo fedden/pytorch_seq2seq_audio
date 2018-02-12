@@ -1,6 +1,6 @@
 import numpy as np
 import librosa
-from utils import to_var, random_mask
+from search.utils import to_var, random_mask
 import torch
 import io
 import soundfile as sf
@@ -31,16 +31,16 @@ class AudioDataset():
         self.fft_size = fft_size
         self.feature_size = (fft_size // 2) + 1
         self.hop_length = hop_length
+        self.input_noise = input_noise
 
         # Get data.
         if url:
             self.data, self.sample_rate = \
                 sf.read(io.BytesIO(urlopen(url).read()))
+            self.data = np.mean(self.data, axis=1)
         else:
-            self.data, self.sample_rate = librosa.load(path)
+            self.data, self.sample_rate = librosa.load(path, mono=True)
 
-        # To mono and trim if necessary.
-        self.data = np.mean(self.data, axis=1)
         if limit is not None:
             self.data = self.data[:limit * self.sample_rate]
 

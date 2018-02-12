@@ -2,6 +2,7 @@ import os
 import json
 import librosa
 import numpy as np
+import torch.nn as nn
 from inspect import signature
 from collections import OrderedDict
 
@@ -132,6 +133,27 @@ def random_search(shape):
     return np.random.uniform(size=shape)
 
 
+def save_experiment(save_path, results, arguments, experiment_number):
+    save_folder = os.path.join(save_path, str(experiment_number))
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
+    
+    args = arguments.copy()
+    if args['criterion'] == nn.MSELoss(size_average=True):
+        args['criterion'] = 0
+    else:
+        args['criterion'] = 1
+    
+    with open(os.path.join(save_folder, "args.json"), 'w') as file_pointer:
+        json.dump(args, file_pointer, sort_keys=True, indent=4)
+
+    
+    for i, audio in enumerate(results):
+        path = os.path.join(save_folder, "result_{}.wav".format(i))
+        librosa.output.write_wav(path, audio, 44100)
+    
+
+
 class Alchemist():
 
     """Alchemist class."""
@@ -182,7 +204,15 @@ class Alchemist():
         # Save settings.
         settings_path = os.path.join(self.save_path, 'settings.npy')
         with open(settings_path, 'w') as file_pointer:
-            json.dump(self.settings, file_pointer, sort_keys=True, indent=4)
+
+            settings = self.settings.copy()
+
+            if settings['criterion'] == nn.MSELoss(size_average=True):
+                settings['criterion'] = 0
+            else:
+                settings['criterion'] = 1
+
+            json.dump(settings, file_pointer, sort_keys=True, indent=4)
 
         if self.settings['search_type'] == 'target':
             np.save()
@@ -196,8 +226,12 @@ class Alchemist():
         settings_path = os.path.join(self.save_path, 'settings.npy')
         with open(settings_path, 'r') as file_pointer:
             self.settings = json.load(file_pointer)
+            if self.settings['criterion'] == 0:
+                self.settings['criterion'] = nn.MSELoss(size_average=True)
+            else:
+                self.settings['criterion'] = nn.MSELoss(size_average=False)
 
-    def run(self):
+    def run(self, verbose=True):
         options_str = "run add_experiment_fn first!"
         assert self.experiment_options is not None, options_str
 
@@ -222,16 +256,29 @@ class Alchemist():
                     fitness = evaluate_fitness_target(results,
                                                       sample_rate,
                                                       self.target)
+                else:
+                    fitness = 0
 
                 fitnesses.append(fitness)
+                
+                save_experiment(self.settings['save_path'], 
+                                results, 
+                                arguments, 
+                                self.settings['experiment']) 
+                     
                 self.settings['experiment'] += 1
 
             except (KeyboardInterrupt, SystemExit):
                 raise
 
             except Exception as e:
-                self.log_error(arguments, e)
-                fitnesses.append(0.0)
+                raise
+#            except Exception as e:
+#                self.log_error(arguments, e)
+#                fitnesses.append(0.0)
+
+            if verbose:
+                print("{}/{} configurations tried".format(self.settings['experiment'], len(self.population)))
 
         # Optimise population.
         if self.settings['search_type'] in ['novelty', 'target']:
@@ -240,15 +287,21 @@ class Alchemist():
                                                 self.mutation_scale)
         else:
             gene_size = len(self.experiment_options)
-            shape = (self.population_size, gene_size)
+            shape = (self.settings['population_size'], gene_size)
             self.population = random_search(shape)
 
     def log_error(self, arguments, error):
-        file_path = os.path.join(self.save_path, "log.txt")
+        file_path = os.path.join(self.settings['save_path'], "log.txt")
+        args = arguments.copy()
+        if args['criterion'] == nn.MSELoss(size_average=True):
+            args['criterion'] = 0
+        else:
+            args['criterion'] = 1
+
         with open(file_path, "a") as log_file:
             line = "\nProgram settings '{}' produced '{}' as an error"
             error_str = str(error)
-            settings = json.dumps(arguments, indent=4, sort_keys=True)
+            settings = json.dumps(args, indent=4, sort_keys=True)
             log_file.write(line.format(settings, error_str))
 
     def add_experiment_fn(self, experiment_fn, **kwargs):
