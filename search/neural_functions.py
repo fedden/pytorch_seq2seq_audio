@@ -94,7 +94,8 @@ def experiment(attention_method,
                batch_size,
                number_epochs,
                url,
-               path):
+               path,
+               input_noise):
 
     seed = 42
     feature_size = hidden_size = (fft_size // 2) + 1
@@ -136,7 +137,8 @@ def experiment(attention_method,
                         sequence_length=sequence_length,
                         url=url,
                         path=path,
-                        limit=20)
+                        limit=20,
+                        input_noise=input_noise)
 
     indices = np.random.permutation(data.dataset_size)[:batch_size]
     start_sequences = to_var(torch.from_numpy(data.x[indices]))

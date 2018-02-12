@@ -1,6 +1,6 @@
 import numpy as np
 import librosa
-from utils import to_var
+from utils import to_var, random_mask
 import torch
 import io
 import soundfile as sf
@@ -17,7 +17,8 @@ class AudioDataset():
                  sequence_length,
                  url=None,
                  path=None,
-                 limit=None):
+                 limit=None,
+                 input_noise=0.0):
 
         # Sanity checks.
         data_str = "One (and only one) of these should be passed."
@@ -73,7 +74,10 @@ class AudioDataset():
             for start in range(0, len(x) - self.batch_size, self.batch_size):
                 end = start + self.batch_size
 
-                batch_x = torch.from_numpy(x[start:end])
-                batch_y = torch.from_numpy(y[start:end])
+                batch_x = random_mask(x[start:end], self.input_noise)
+                batch_y = y[start:end]
+
+                batch_x = torch.from_numpy(batch_x)
+                batch_y = torch.from_numpy(batch_y)
 
                 yield to_var(batch_x), to_var(batch_y), epoch

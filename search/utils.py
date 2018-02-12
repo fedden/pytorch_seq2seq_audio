@@ -21,6 +21,12 @@ def to_var(x):
     return Variable(x)
 
 
+def random_mask(tensor, amount):
+    probabilities = np.random.uniform(size=tensor.shape)
+    zeros = np.zeros_like(tensor)
+    return np.where(probabilities > amount, tensor, zeros)
+
+
 def griffin_lim(spectrogram,
                 n_iter=100,
                 window='hann',
