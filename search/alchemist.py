@@ -271,11 +271,11 @@ class Alchemist():
             except (KeyboardInterrupt, SystemExit):
                 raise
 
-            except Exception as e:
-                raise
 #            except Exception as e:
-#                self.log_error(arguments, e)
-#                fitnesses.append(0.0)
+#                raise
+            except Exception as e:
+                self.log_error(arguments, e)
+                fitnesses.append(0.0)
 
             if verbose:
                 print("{}/{} configurations tried".format(self.settings['experiment'], len(self.population)))

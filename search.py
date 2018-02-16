@@ -3,7 +3,7 @@ import torch.nn as nn
 from search.alchemist import Alchemist
 from search.neural_functions import experiment
 
-save_path = "experiment_1"
+save_path = "experiment_22"
 audio_path = "notebooks/massive_chops/trimmed/vocals_trimmed.wav"
 population_size = 100
 cuda_device = 1
@@ -25,7 +25,7 @@ with torch.cuda.device(cuda_device):
                               learning_rate=(0.00005, 0.01),
                               decoder_learning_ratio=(1.0, 10.0),
                               batch_size=[8],
-                              number_epochs=[1],
+                              number_epochs=[20],
                               url=[None],
                               path=[audio_path],
                               input_noise=(0.0, 1.0))
