@@ -6,7 +6,7 @@ import lws
 import librosa
 import argparse
 import numpy as np
-from neural_methods import train, run
+from neural_methods import train, run, str_to_bool
 from utils import get_file_name
 from audio import AudioDataset, griffin_lim
 from model import EncoderRNN, AttentionDecoderRNN, to_var
@@ -22,10 +22,10 @@ parser.add_argument('-c', '--cuda_device', required=True)
 args = vars(parser.parse_args())
 
 fft_size = int(args['fft_size'])
-lws_mags = bool(args['fft_size'])
-griffin_lim_phase = bool(args['griffin_lim_phase'])
+lws_mags = str_to_bool(args['fft_size'])
+griffin_lim_phase = str_to_bool(args['griffin_lim_phase'])
 griffin_lim_iterations = int(args['griffin_lim_iterations'])
-perfect_reconstruction = bool(args['perfect_reconstruction'])
+perfect_reconstruction = str_to_bool(args['perfect_reconstruction'])
 mode = args['mode']
 cuda_device = int(args['cuda_device'])
 sequence_length = 150
