@@ -112,6 +112,11 @@ with torch.cuda.device(cuda_device):
                                       n_fft=fft_size,
                                       hop_length=hop_length)
     else:
+        if lws_processor is None:
+            lws_processor = lws.lws(fft_size,
+                                    hop_length,
+                                    mode=mode,
+                                    perfectrec=perfect_reconstruction)
         predicted_stfts = lws_processor.run_lws(first_magnitudes)
         predicted_audio = lws_processor.istft(predicted_stfts)
 
