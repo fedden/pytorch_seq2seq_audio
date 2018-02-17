@@ -8,7 +8,7 @@ def get_file_name(fft_size,
                   mode):
 
     file_name = "fft_size_{}_lws_mags_{}_gl_phase_{}"
-    if griffin_lim_phase:
+    if griffin_lim_phase == 1:
         file_name += "_gl_iters_{}.wav"
         file_name = file_name.format(fft_size,
                                      int(lws_mags),

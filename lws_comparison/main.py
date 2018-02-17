@@ -35,6 +35,11 @@ feature_size = input_size = hidden_size = (fft_size // 2) + 1
 hop_length = fft_size // 4
 path = "../notebooks/massive_chops/trimmed/vocals_trimmed.wav"
 
+file_name = get_file_name(fft_size, lws_mags, griffin_lim_phase,
+                          griffin_lim_iterations, perfect_reconstruction,
+                          mode)
+print("training and ultimately producing:", file_name)
+
 with torch.cuda.device(cuda_device):
 
     if lws_mags:
@@ -82,7 +87,7 @@ with torch.cuda.device(cuda_device):
 
     # Train.
     previous_epoch = -1
-    epoch_str = "epoch {}/{}, loss {}"
+    epoch_str = "epoch {}/{}, loss {}     "
     for x, y, epoch in dataset.get_next_batch(number_epochs):
 
         loss = train(encoder, decoder, encoder_optimiser, decoder_optimiser,
@@ -111,8 +116,5 @@ with torch.cuda.device(cuda_device):
         predicted_audio = lws_processor.istft(predicted_stfts)
 
     # Get file name and write to wav.
-    file_name = get_file_name(fft_size, lws_mags, griffin_lim_phase,
-                              griffin_lim_iterations, perfect_reconstruction,
-                              mode)
     librosa.output.write_wav(file_name, predicted_audio, dataset.sample_rate)
     print("Done.")
