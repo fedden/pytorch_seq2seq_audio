@@ -6,9 +6,9 @@ import lws
 import librosa
 import argparse
 import numpy as np
-from neural_methods import train, run, str_to_bool
-from utils import get_file_name
+from neural_methods import train, run
 from audio import AudioDataset, griffin_lim
+from utils import get_file_name, str_to_bool
 from model import EncoderRNN, AttentionDecoderRNN, to_var
 
 parser = argparse.ArgumentParser()
