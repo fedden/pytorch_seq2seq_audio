@@ -30,10 +30,10 @@ mode = args['mode']
 cuda_device = int(args['cuda_device'])
 sequence_length = 150
 batch_size = 8
-number_epochs = 20
+number_epochs = 1
 feature_size = input_size = hidden_size = (fft_size // 2) + 1
 hop_length = fft_size // 4
-path = "./massive_chops/trimmed/vocals_trimmed.wav"
+path = "../notebooks/massive_chops/trimmed/vocals_trimmed.wav"
 
 with torch.cuda.device(cuda_device):
 
