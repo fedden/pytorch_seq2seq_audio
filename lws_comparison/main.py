@@ -22,7 +22,7 @@ parser.add_argument('-c', '--cuda_device', required=True)
 args = vars(parser.parse_args())
 
 fft_size = int(args['fft_size'])
-lws_mags = str_to_bool(args['fft_size'])
+lws_mags = str_to_bool(args['lws_mags'])
 griffin_lim_phase = str_to_bool(args['griffin_lim_phase'])
 griffin_lim_iterations = int(args['griffin_lim_iterations'])
 perfect_reconstruction = str_to_bool(args['perfect_reconstruction'])
