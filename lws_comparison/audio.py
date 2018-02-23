@@ -4,11 +4,7 @@ import librosa
 import torch
 
 
-def griffin_lim(spectrogram,
-                n_iter=100,
-                window='hann',
-                n_fft=2048,
-                hop_length=-1):
+def griffin_lim(spectrogram, n_iter=100, window='hann', n_fft=2048, hop_length=-1):
     if hop_length == -1:
         hop_length = n_fft // 4
 
@@ -27,6 +23,27 @@ def griffin_lim(spectrogram,
     return inverse
 
 
+def overlap_and_add(blocks, block_step, window_fn=np.hanning, overlap_axis=1):
+    '''Thanks Memo!
+    Can operate on any rank ndarray, [n, t, ...] where t is the overlap axis'''
+    block_step = int(block_step)
+    window_length = blocks.shape[overlap_axis]
+    if window_fn:
+        window = window_fn(window_length)
+        dim_array = np.ones((1, blocks.ndim), int).ravel()
+        dim_array[overlap_axis] = -1
+        window = window.reshape(dim_array)
+        blocks = blocks * window
+     
+    shape0 = (len(blocks)-1) * block_step + window_length
+    signal = np.zeros(shape=(shape0,)+blocks.shape[2:], dtype=blocks.dtype.type)
+    for i in range(0, len(blocks)):
+        signal[i*block_step:i*block_step+window_length,...] += blocks[i,...] 
+    signal /= 0.5 * window_length / block_step
+     
+    return signal
+
+
 class AudioDataset():
     """A class to convert audio found at an url to magnitude frames."""
 
@@ -35,6 +52,7 @@ class AudioDataset():
                  hop_length,
                  batch_size,
                  sequence_length,
+                 overlap_ratio=0.0,
                  lws_processor=None,
                  path=None,
                  limit=None):
@@ -65,9 +83,19 @@ class AudioDataset():
         self.batch_size = batch_size
         self.x = np.zeros(input_shape, dtype=np.float32)
         self.y = np.zeros(target_shape, dtype=np.float32)
+        
+        if overlap_ratio < 0.0 or overlap_ratio > 1.0:
+            message = '''Keep overlap percentage between zero and one.
+            0.0 for no overlap at all; the model will predict entirely future frames.
+            1.0 for 100% overlap; the model will predict the input (autoencoder).
+            '''
+            raise ValueError(message)
+            
+        self.offset = int(sequence_length * overlap_ratio)
 
         for i, x_start in enumerate(range(0, self.dataset_size)):
-            y_start = x_end = x_start + sequence_length
+            x_end = x_start + sequence_length
+            y_start = x_end - self.offset
             y_end = y_start + sequence_length
 
             self.x[i] = self.magnitudes[x_start:x_end]

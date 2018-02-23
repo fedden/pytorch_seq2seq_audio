@@ -47,7 +47,8 @@ def train(encoder,
 def run(encoder,
         decoder,
         start_sequences,
-        amount_frames):
+        amount_frames,
+        init_hidden_once=True):
     encoder.train(False)
     decoder.train(False)
 
@@ -56,11 +57,16 @@ def run(encoder,
     model_input = start_sequences.view(batch_size, sequence_length, fft_size)
 
     frames = np.zeros((amount_frames, batch_size, sequence_length, fft_size))
+    
+    if init_hidden_once:
+        encoder_hidden = encoder.init_hidden()
 
     # Repeatedly sample the RNN and get the output.
     for i in range(amount_frames):
 
-        encoder_hidden = encoder.init_hidden()
+        if not init_hidden_once:
+            encoder_hidden = encoder.init_hidden()
+            
         encoder_outputs, encoder_hidden = encoder(model_input, encoder_hidden)
 
         decoder_input = model_input

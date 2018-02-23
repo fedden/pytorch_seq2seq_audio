@@ -6,23 +6,26 @@ def get_file_name(fft_size,
                   griffin_lim_phase,
                   griffin_lim_iterations,
                   perfect_reconstruction,
-                  mode):
+                  mode,
+                  overlap_ratio):
 
     file_name = "fft_size_{}_lws_mags_{}_gl_phase_{}"
 
     if griffin_lim_phase == 1:
-        file_name += "_gl_iters_{}.wav"
+        file_name += "_gl_iters_{}_overlap_{}.wav"
         file_name = file_name.format(fft_size,
                                      int(lws_mags),
                                      int(griffin_lim_phase),
-                                     griffin_lim_iterations)
+                                     griffin_lim_iterations,
+                                     overlap_ratio)
     else:
-        file_name += "_perfect_rec_{}_mode_{}.wav"
+        file_name += "_perfect_rec_{}_mode_{}_overlap_{}.wav"
         file_name = file_name.format(fft_size,
                                      int(lws_mags),
                                      int(griffin_lim_phase),
                                      int(perfect_reconstruction),
-                                     mode)
+                                     mode,
+                                     overlap_ratio)
     return file_name
 
 

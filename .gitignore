@@ -3,4 +3,6 @@
 *.WAVE
 *.mp3
 *.json
+*.pytorch
+*.zip
 
