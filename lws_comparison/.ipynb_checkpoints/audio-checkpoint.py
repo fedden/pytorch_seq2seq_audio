@@ -126,8 +126,15 @@ def magnitudes_to_audio(magnitudes, settings, dataset, phase_estimation_type):
     elif phase_estimation_type == 'lws':
             
         # Reconstruct phases.
-        predicted_stfts = dataset.lws_processor.run_lws(magnitudes)
-        predicted_audio = dataset.lws_processor.istft(predicted_stfts)
+        double_mags = magnitudes.astype(np.float64)
+        predicted_stfts = dataset.lws_processor.run_lws(double_mags)
+        
+        # Did we use the librosa or lws stft originally to get the mags?
+        if settings.lws_mags:
+            predicted_audio = dataset.lws_processor.istft(predicted_stfts)
+        else:
+            predicted_audio = librosa.istft(predicted_stfts.T, 
+                                            hop_length=settings.hop_length)
         
     # Did we specify vocoder-based phase reconstruction?
     elif phase_estimation_type == 'vocoder':

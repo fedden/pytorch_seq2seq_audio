@@ -9,6 +9,7 @@ import numpy as np
 from model import to_var
 from settings import Settings
 from utils import get_file_name
+from sanity import sanity_check
 from audio import AudioDataset, magnitudes_to_audio
 from neural_methods import get_model_and_optimisers, train_batch
 from neural_methods import train, inference, load_model, save_model
@@ -52,6 +53,10 @@ with torch.cuda.device(settings.cuda_device):
 
     # Create audio dataset. Potentially use lws processor.
     dataset = AudioDataset(settings)
+    
+    # Check reconstruction performance if necessary.
+    if settings.sanity_check:
+        sanity_check(settings, dataset)
 
     # Train model.
     train(encoder, decoder, 
