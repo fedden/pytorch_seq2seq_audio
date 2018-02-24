@@ -1,31 +1,25 @@
 import argparse
 
 
-def get_file_name(fft_size,
-                  lws_mags,
-                  griffin_lim_phase,
-                  griffin_lim_iterations,
-                  perfect_reconstruction,
-                  mode,
-                  overlap_ratio):
+def get_file_name(settings):
 
     file_name = "fft_size_{}_lws_mags_{}_gl_phase_{}"
 
-    if griffin_lim_phase == 1:
+    if settings.griffin_lim_phase == 1:
         file_name += "_gl_iters_{}_overlap_{}.wav"
-        file_name = file_name.format(fft_size,
-                                     int(lws_mags),
-                                     int(griffin_lim_phase),
-                                     griffin_lim_iterations,
-                                     overlap_ratio)
+        file_name = file_name.format(settings.fft_size,
+                                     int(settings.lws_mags),
+                                     int(settings.griffin_lim_phase),
+                                     settings.griffin_lim_iterations,
+                                     settings.overlap_ratio)
     else:
         file_name += "_perfect_rec_{}_mode_{}_overlap_{}.wav"
-        file_name = file_name.format(fft_size,
-                                     int(lws_mags),
-                                     int(griffin_lim_phase),
-                                     int(perfect_reconstruction),
-                                     mode,
-                                     overlap_ratio)
+        file_name = file_name.format(settings.fft_size,
+                                     int(settings.lws_mags),
+                                     int(settings.griffin_lim_phase),
+                                     int(settings.perfect_reconstruction),
+                                     settings.mode,
+                                     settings.overlap_ratio)
     return file_name
 
 

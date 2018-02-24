@@ -1,16 +1,83 @@
+import os
 import torch
+import torch.nn as nn
 import numpy as np
 from torch.autograd import Variable
+from model import EncoderRNN, AttentionDecoderRNN
 
 
-def train(encoder,
-          decoder,
-          encoder_optimiser,
-          decoder_optimiser,
-          input_batch,
-          target_batch,
-          criterion,
-          clip_threshold):
+def load_model(settings, encoder, decoder):
+    encoder_path = os.path.join(settings.load_path, 'encoder_model.pytorch')
+    decoder_path = os.path.join(settings.load_path, 'decoder_model.pytorch')
+    encoder.load_state_dict(torch.load(encoder_path))
+    decoder.load_state_dict(torch.load(decoder_path))
+    return encoder, decoder
+
+
+def save_model(settings, encoder, decoder):
+    folder_name = 'epoch_{}_loss_{}_overlap_{}'
+    folder_name = folder_name.format((settings.epoch + 1), 
+                                     settings.loss, 
+                                     settings.overlap_ratio)
+    save_path = os.path.join(settings.save_path, folder_name)
+
+    # Create directory if neccessary.
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    # Ensure directory is empty and save.
+    if not os.listdir(save_path):
+        torch.save(encoder.state_dict(), os.path.join(save_path, 'encoder_model.pytorch'))
+        torch.save(decoder.state_dict(), os.path.join(save_path, 'decoder_model.pytorch'))
+    else:
+        print('Folder {} already exists and is not empty. Please specify a folder path with no files or subdirectories.'.format(save_path))
+
+
+def get_model_and_optimisers(settings):
+    
+    # Construct RNNs and optimisers.
+    encoder = EncoderRNN(input_size=settings.feature_size,
+                         batch_size=settings.batch_size,
+                         hidden_size=settings.feature_size,
+                         number_layers=settings.encoder_layers,
+                         dropout=settings.dropout)
+    decoder = AttentionDecoderRNN('general',
+                                  batch_size=settings.batch_size,
+                                  hidden_size=settings.hidden_size,
+                                  output_size=settings.feature_size,
+                                  number_layers=settings.decoder_layers,
+                                  dropout=settings.dropout)
+    
+    # Use L2 loss to measure performance.
+    criterion = nn.MSELoss()
+
+    # Enable GPU tensors provided GPUs actually exist!
+    # Instanciate the models on the GPU.
+    if torch.cuda.is_available():
+        encoder.cuda()
+        decoder.cuda()
+        criterion.cuda()
+        torch.cuda.manual_seed(42)
+    else:
+        torch.manual_seed(42)
+
+    # Both the encoder have different optimsisers (and different learning rates)
+    encoder_optimiser = torch.optim.Adam(encoder.parameters(), 
+                                         lr=settings.learning_rate)
+    decoder_optimiser = torch.optim.Adam(decoder.parameters(), 
+                                         lr=settings.learning_rate * 5)
+    
+    return encoder, decoder, criterion, encoder_optimiser, decoder_optimiser
+
+
+def train_batch(encoder,
+                decoder,
+                encoder_optimiser,
+                decoder_optimiser,
+                input_batch,
+                target_batch,
+                criterion,
+                clip_threshold):
 
     # Zero the gradients of both optimisers.
     encoder_optimiser.zero_grad()
@@ -44,11 +111,35 @@ def train(encoder,
     return loss.data[0]
 
 
-def run(encoder,
-        decoder,
-        start_sequences,
-        amount_frames,
-        init_hidden_once=True):
+def train(encoder, 
+          decoder, 
+          encoder_optimiser, 
+          decoder_optimiser,
+          dataset,
+          settings,
+          criterion):
+    
+    previous_epoch = settings.epoch
+    for x, y, epoch in dataset.get_next_batch(settings.number_epochs):
+        
+        loss = train_batch(encoder, decoder, encoder_optimiser, 
+                     decoder_optimiser, x, y, criterion, 5.0)
+        settings.epoch = epoch
+        settings.loss = loss
+
+        if settings.epoch != previous_epoch:
+            previous_epoch = settings.epoch
+            print('')
+        else:
+            epoch_str = "epoch {}/{}, loss {}     "
+            print(epoch_str.format(epoch, settings.number_epochs, loss), end="\r")
+
+
+def inference(encoder,
+              decoder,
+              start_sequences,
+              amount_frames,
+              init_hidden_once=True):
     encoder.train(False)
     decoder.train(False)
 
