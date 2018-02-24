@@ -16,6 +16,7 @@ def check_vocoder():
 
 def check_phase_estimation_methods():
     pass
+    
 
 
 def generate_report():
@@ -27,4 +28,6 @@ def generate_report():
     pass
 
 def run_sanity_check():
+    
+    # Load each file in the test folder.
     pass
