@@ -106,17 +106,17 @@ def overlap_and_add(blocks, block_step, window_fn=np.hanning, overlap_axis=1):
     return signal
 
 
-def magnitudes_to_audio(magnitudes, settings, lws_processor, phase_estimation_type):
+def magnitudes_to_audio(magnitudes, settings, dataset, phase_estimation_type):
     # Overlap results if required.
     if settings.overlap_ratio > 0.0:
         new_shape = (-1, settings.sequence_length, settings.feature_size)
-        first_magnitudes = first_magnitudes.reshape(new_shape)
-        first_magnitudes = overlap_and_add(first_magnitudes, dataset.offset)
+        magnitudes = magnitudes.reshape(new_shape)
+        magnitudes = overlap_and_add(magnitudes, dataset.offset)
             
     # Reconstruct phase and generate samples.
     # Did we specify griffin lim for phase reconstruction?
     if phase_estimation_type == 'griffin_lim':
-        predicted_audio = griffin_lim(first_magnitudes,
+        predicted_audio = griffin_lim(magnitudes.T,
                                       n_iter=settings.griffin_lim_iterations,
                                       window='hann',
                                       n_fft=settings.fft_size,
@@ -126,21 +126,20 @@ def magnitudes_to_audio(magnitudes, settings, lws_processor, phase_estimation_ty
     elif phase_estimation_type == 'lws':
             
         # Reconstruct phases.
-        predicted_stfts = lws_processor.run_lws(first_magnitudes)
-        predicted_audio = lws_processor.istft(predicted_stfts)
+        predicted_stfts = dataset.lws_processor.run_lws(magnitudes)
+        predicted_audio = dataset.lws_processor.istft(predicted_stfts)
         
     # Did we specify vocoder-based phase reconstruction?
     elif phase_estimation_type == 'vocoder':
-        phases = vocoder_phases(first_magnitudes.shape[0], 
+        phases = vocoder_phases(magnitudes.shape[0], 
                                 settings.fft_size, 
                                 settings.hop_length, 
                                 dataset.sample_rate)
-        predicted_stfts = polar_to_cartesian(first_magnitudes, phases)
+        predicted_stfts = polar_to_cartesian(magnitudes, phases)
         
         # Did we use the librosa or lws stft originally to get the mags?
         if settings.lws_mags:
-            predicted_audio = lws_processor.istft(predicted_stfts.T, 
-                                                  hop_length=settings.hop_length)
+            predicted_audio = dataset.lws_processor.istft(predicted_stfts)
         else:
             predicted_audio = librosa.istft(predicted_stfts.T, 
                                             hop_length=settings.hop_length)

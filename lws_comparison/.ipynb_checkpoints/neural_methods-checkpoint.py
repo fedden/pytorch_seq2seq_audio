@@ -16,10 +16,6 @@ def load_model(settings, encoder, decoder):
 
 def save_model(settings, encoder, decoder):
 
-    # Create directory if neccessary.
-    if not os.path.exists(settings.save_path):
-        os.makedirs(settings.save_path)
-
     # Ensure directory is empty and save.
     if not os.listdir(settings.save_path):
         torch.save(encoder.state_dict(), os.path.join(settings.save_path, 'encoder_model.pytorch'))

@@ -1,5 +1,6 @@
 from utils import str_to_bool
 import numpy as np
+import os
 
 
 class Settings():
@@ -69,6 +70,9 @@ class Settings():
         # Set this to check that reconstructions are working sensibly.
         self.sanity_check = args['sanity_check']
         
+        # Set this to have the program output more verbosely.
+        self.verbose = args['verbose']
+        
         # How many layers deep will the encoder be?
         if args['encoder_layers'] == None:
             self.encoder_layers = 3
@@ -123,4 +127,15 @@ class Settings():
             gl_str =  'There must set a value for the griffin lim '
             gl_str += 'iterations when using griffin lim. 100 is a good value.'
             raise ValueError(gl_str)
+            
+        # Does the folder exist and is already not empty? 
+        # Create directory if neccessary.
+        if not os.path.exists(self.save_path):
+            os.makedirs(self.save_path)
+        
+        # Quit before we overwrite stuff if folder is non-empty.
+        if os.listdir(self.save_path):
+            save_str =  'Folder {} already exists and is not empty. '
+            save_str += 'Please specify a folder path with no files or subdirectories.'
+            raise ValueError(save_str.format(self.save_path))
         
