@@ -15,22 +15,19 @@ def load_model(settings, encoder, decoder):
 
 
 def save_model(settings, encoder, decoder):
-    folder_name = 'epoch_{}_loss_{}_overlap_{}'
-    folder_name = folder_name.format((settings.epoch + 1), 
-                                     settings.loss, 
-                                     settings.overlap_ratio)
-    save_path = os.path.join(settings.save_path, folder_name)
 
     # Create directory if neccessary.
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
+    if not os.path.exists(settings.save_path):
+        os.makedirs(settings.save_path)
 
     # Ensure directory is empty and save.
-    if not os.listdir(save_path):
-        torch.save(encoder.state_dict(), os.path.join(save_path, 'encoder_model.pytorch'))
-        torch.save(decoder.state_dict(), os.path.join(save_path, 'decoder_model.pytorch'))
+    if not os.listdir(settings.save_path):
+        torch.save(encoder.state_dict(), os.path.join(settings.save_path, 'encoder_model.pytorch'))
+        torch.save(decoder.state_dict(), os.path.join(settings.save_path, 'decoder_model.pytorch'))
     else:
-        print('Folder {} already exists and is not empty. Please specify a folder path with no files or subdirectories.'.format(save_path))
+        save_str =  'Folder {} already exists and is not empty. '
+        save_str += 'Please specify a folder path with no files or subdirectories.'
+        print(save_str.format(settings.save_path))
 
 
 def get_model_and_optimisers(settings):

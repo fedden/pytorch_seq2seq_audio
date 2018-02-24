@@ -1,10 +1,12 @@
 from utils import str_to_bool
+import numpy as np
+
 
 class Settings():
     
     def __init__(self, args):
         
-        # Used for future se ssions and file names.
+        # Used for future sessions and file names.
         self.epoch = 0
         self.loss = 0
         
@@ -12,23 +14,10 @@ class Settings():
         self.fft_size = int(args['fft_size'])
         
         # Do we use lws for mags (or librosa) ?
-        self.lws_mags = str_to_bool(args['lws_mags'])
+        self.lws_mags = str_to_bool(args['use_lws_mags'])
         
-        # Which phase estimation method do we use?
-        if args['phase_estimation_method'] == 'lws':
-            self.griffin_lim_phase = False
-            self.lws_phase = True
-            self.vocoder_phase = False
-            
-        elif args['phase_estimation_method'] == 'griffin_lim':
-            self.griffin_lim_phase = True
-            self.lws_phase = False
-            self.vocoder_phase = False
-        
-        elif args['phase_estimation_method'] == 'vocoder':
-            self.griffin_lim_phase = False
-            self.lws_phase = False
-            self.vocoder_phase = True
+        # Which phase estimation method(s) do we use?
+        self.phase_estimation_methods = args['phase_estimation_methods']
             
         # How many iterations of griffin lim phase estimation?
         if args['griffin_lim_iterations'] != None:
@@ -110,23 +99,28 @@ class Settings():
         else:
             self.inference_length = int(args['inference_length'])
         
-        # Sanity checks.
-        valid_phase_options = ['lws', 'griffin_lim', 'vocoder']
-        correct_phase = args['phase_estimation_method'] in valid_phase_options
+        # Some sanity checks.
+        # Did we pass the correct phase method(s)?
+        correct_phase = np.all([method in ['lws', 'griffin_lim', 'vocoder'] 
+                                for method in self.phase_estimation_methods])
         if not correct_phase:
-            err_str = 'Please ensure phase_estimation_method is passed '
-            err_str += 'with lws, griffin_lim or vocoder'
+            err_str =  'Please ensure phase_estimation_methods is passed '
+            err_str += 'using options such as lws, griffin_lim and/or vocoder'
             raise ValueError(err_str)
         
+        # Are the settings passed for griffin lim or lws respectively?
         incomplete_lws_params = self.mode is None or self.perfect_reconstruction is None
-        incomplete_gl_params = self.griffin_lim_iterations is None
-        if not self.griffin_lim_phase and incomplete_lws_params:
+        incomplete_griffin_lim_params = self.griffin_lim_iterations is None
+        using_griffin_lim = 'griffin_lim' in self.phase_estimation_methods
+        using_lws = 'lws' in self.phase_estimation_methods
+        
+        if using_lws and incomplete_lws_params:
             lws_str =  'Mode and perfect reconstruction parameters '
-            lws_str += 'must both be set.'
+            lws_str += 'must both be set when using lws.'
             raise ValueError(gl_str)
 
-        if self.griffin_lim_phase and incomplete_gl_params:
-            gl_str =  'you must set a value for the griffin lim '
-            gl_str += 'iterations. 100 is a good value.'
+        if using_griffin_lim and incomplete_griffin_lim_params:
+            gl_str =  'There must set a value for the griffin lim '
+            gl_str += 'iterations when using griffin lim. 100 is a good value.'
             raise ValueError(gl_str)
         

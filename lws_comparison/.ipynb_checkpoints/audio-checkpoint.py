@@ -2,6 +2,7 @@ from model import to_var
 import numpy as np
 import librosa
 import torch
+import lws
 
 
 def polar_to_cartesian(magnitude, theta):
@@ -105,10 +106,52 @@ def overlap_and_add(blocks, block_step, window_fn=np.hanning, overlap_axis=1):
     return signal
 
 
+def magnitudes_to_audio(magnitudes, settings, lws_processor, phase_estimation_type):
+    # Overlap results if required.
+    if settings.overlap_ratio > 0.0:
+        new_shape = (-1, settings.sequence_length, settings.feature_size)
+        first_magnitudes = first_magnitudes.reshape(new_shape)
+        first_magnitudes = overlap_and_add(first_magnitudes, dataset.offset)
+            
+    # Reconstruct phase and generate samples.
+    # Did we specify griffin lim for phase reconstruction?
+    if phase_estimation_type == 'griffin_lim':
+        predicted_audio = griffin_lim(first_magnitudes,
+                                      n_iter=settings.griffin_lim_iterations,
+                                      window='hann',
+                                      n_fft=settings.fft_size,
+                                      hop_length=settings.hop_length)
+    
+    # Did we specify lws for phase reconstruction?
+    elif phase_estimation_type == 'lws':
+            
+        # Reconstruct phases.
+        predicted_stfts = lws_processor.run_lws(first_magnitudes)
+        predicted_audio = lws_processor.istft(predicted_stfts)
+        
+    # Did we specify vocoder-based phase reconstruction?
+    elif phase_estimation_type == 'vocoder':
+        phases = vocoder_phases(first_magnitudes.shape[0], 
+                                settings.fft_size, 
+                                settings.hop_length, 
+                                dataset.sample_rate)
+        predicted_stfts = polar_to_cartesian(first_magnitudes, phases)
+        
+        # Did we use the librosa or lws stft originally to get the mags?
+        if settings.lws_mags:
+            predicted_audio = lws_processor.istft(predicted_stfts.T, 
+                                                  hop_length=settings.hop_length)
+        else:
+            predicted_audio = librosa.istft(predicted_stfts.T, 
+                                            hop_length=settings.hop_length)
+        
+    return predicted_audio
+    
+
 class AudioDataset():
     """A class to convert audio found at an url to magnitude frames."""
 
-    def __init__(self, settings, lws_processor=None, limit=None):
+    def __init__(self, settings, limit=None):
 
         self.fft_size = settings.fft_size
         self.feature_size = (settings.fft_size // 2) + 1
@@ -116,13 +159,17 @@ class AudioDataset():
         self.base_epoch = settings.epoch
 
         self.data, self.sample_rate = librosa.load(settings.path, mono=True)
-
         if limit is not None:
             self.data = self.data[:limit * self.sample_rate]
+            
+        self.lws_processor = lws.lws(settings.fft_size,
+                                     settings.hop_length,
+                                     mode=settings.mode,
+                                     perfectrec=settings.perfect_reconstruction) 
 
         # Get features to train on.
-        if lws_processor is not None:
-            self.stfts = lws_processor.stft(self.data)
+        if settings.lws_mags:
+            self.stfts = self.lws_processor.stft(self.data)
             self.magnitudes = np.abs(self.stfts)
 
         else:
