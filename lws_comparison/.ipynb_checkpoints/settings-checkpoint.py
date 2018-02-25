@@ -73,6 +73,9 @@ class Settings():
         # Set this to have the program output more verbosely.
         self.verbose = args['verbose']
         
+        # Set this to have the program plot the generated magnitude spectrum.
+        self.plot_magnitude_spectrum = args['plot_magnitude_spectrum']
+        
         # How many layers deep will the encoder be?
         if args['encoder_layers'] == None:
             self.encoder_layers = 3

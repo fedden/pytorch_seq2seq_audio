@@ -8,9 +8,9 @@ import argparse
 import numpy as np
 from model import to_var
 from settings import Settings
-from utils import get_file_name
 from sanity import sanity_check
 from audio import AudioDataset, magnitudes_to_audio
+from utils import get_file_name, plot_magnitude_spectrum
 from neural_methods import get_model_and_optimisers, train_batch
 from neural_methods import train, inference, load_model, save_model
 
@@ -35,6 +35,7 @@ parser.add_argument('--decoder_layers')
 parser.add_argument('--dropout')
 parser.add_argument('--inference_length')
 parser.add_argument('--learning_rate')
+parser.add_argument('--plot_magnitude_spectrum', action='store_true')
 args = vars(parser.parse_args())
 
 # Houses the settings.
@@ -92,6 +93,12 @@ with torch.cuda.device(settings.cuda_device):
     
     if settings.verbose:
         print('Finished inference. Beginning phase estimation method(s).')
+    
+    # Plot the magnitude spectrum.
+    if settings.plot_magnitude_spectrum:
+        plot_magnitude_spectrum(magnitudes,
+                                title='Magnitude Spectrum',
+                                save_path=get_file_name(settings))
     
     # Create audio with the phase estimation types priorly specified.
     for phase_estimation_method in settings.phase_estimation_methods:

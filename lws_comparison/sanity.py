@@ -2,7 +2,7 @@ import os
 import librosa
 import textwrap
 import numpy as np
-from audio import magnitudes_to_audio
+from audio import magnitudes_to_audio, polar_to_cartesian
 
 
 def check_normalisation_methods():
@@ -62,11 +62,10 @@ def sanity_check(settings, dataset):
                     magnitudes, phases = librosa.magphase(stfts.T)
                     settings.lws_mags = False
                     
-                    recovered_stfts = magnitudes.astype(np.complex64) * phases
-                    
+                    recovered_stfts = magnitudes * phases 
                     # Try reconstructing the sound with the original
                     # phases using the librosa istft.
-                    recovered_audio = librosa.istft(recovered_stfts,
+                    recovered_audio = librosa.istft(recovered_stfts.T,
                                                     hop_length=settings.hop_length)
                 
                 elif magnitude_source == 'lws':
@@ -100,13 +99,12 @@ def sanity_check(settings, dataset):
                 # Save recovered audio to disk.
                 # If specified save path, save output there. 
                 # Else save in working directory.
-                save_name = 'recovered_{}_{}_{}'.format(estimation_method, 
-                                                        magnitude_source, 
-                                                        file_name)
+                save_name = 'recovered_{}_{}'.format(magnitude_source, 
+                                                     file_name)
                 if settings.save_path is not None:
                     save_name = os.path.join(settings.save_path, save_name)
                 librosa.output.write_wav(save_name, 
-                                         reconstructed_audio, 
+                                         recovered_audio, 
                                          dataset.sample_rate)
                     
                 # Get phase estimated audio.

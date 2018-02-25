@@ -1,4 +1,5 @@
 import argparse
+import matplotlib.pyplot as plt
 
 
 def get_file_name(settings):
@@ -21,3 +22,21 @@ def str_to_bool(value):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+        
+def plot_magnitude_spectrum(magnitudes, 
+                            title='', 
+                            figure_size=(12, 8),
+                            save_path=''):
+    if save_path == '':
+        raise ValueError('You need to pass a path to save the magnitude plot.')
+    
+    fig = plt.figure(figsize=figure_size)
+    ax = fig.add_subplot(111)
+    
+    if title != '':
+        ax.set_title(title)
+        
+    plt.imshow(magnitudes)
+    fig.savefig(save_path)
+    plt.close(fig) 
