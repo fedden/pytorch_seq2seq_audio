@@ -23,10 +23,10 @@ def get_mean_mfcc_distance(audio_a, audio_b, sample_rate):
     return np.mean(np.abs(mfcc_a - mfcc_b))
 
 
-def sanity_check(settings, dataset):
+def sanity_check(settings, dataset, path='test_wavs/'):
     
     # Load audio settings.
-    test_folder = 'test_wavs/'
+    test_folder = path
     load_mono = True
     
     # Hack to ensure ensure mags are reconstructed correctly.
@@ -62,10 +62,7 @@ def sanity_check(settings, dataset):
                     magnitudes, phases = librosa.magphase(stfts.T)
                     settings.lws_mags = False
                     
-                    recovered_stfts = magnitudes * phases # Bad!
-                    
-                    # recovered_stfts = polar_to_cartesian(magnitudes, phases)
-                    
+                    recovered_stfts = magnitudes * phases 
                     # Try reconstructing the sound with the original
                     # phases using the librosa istft.
                     recovered_audio = librosa.istft(recovered_stfts.T,

@@ -57,7 +57,7 @@ with torch.cuda.device(settings.cuda_device):
     
     # Check reconstruction performance if necessary.
     if settings.sanity_check:
-        sanity_check(settings, dataset)
+        sanity_check(settings, dataset, path='../notebooks/massive_chops/trimmed')
 
     # Train model.
     train(encoder, decoder, 
@@ -96,9 +96,15 @@ with torch.cuda.device(settings.cuda_device):
     
     # Plot the magnitude spectrum.
     if settings.plot_magnitude_spectrum:
+        magnitude_path = get_file_name(settings) + '.png'
+        
+        if settings.save_path is not None:
+            magnitude_path = os.path.join(settings.save_path, 
+                                          magnitude_path)
+            
         plot_magnitude_spectrum(magnitudes,
                                 title='Magnitude Spectrum',
-                                save_path=get_file_name(settings))
+                                save_path=magnitude_path)
     
     # Create audio with the phase estimation types priorly specified.
     for phase_estimation_method in settings.phase_estimation_methods:

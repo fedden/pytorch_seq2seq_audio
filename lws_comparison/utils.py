@@ -1,4 +1,7 @@
 import argparse
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
@@ -26,17 +29,19 @@ def str_to_bool(value):
         
 def plot_magnitude_spectrum(magnitudes, 
                             title='', 
-                            figure_size=(12, 8),
+                            figure_size=(8, 6),
                             save_path=''):
     if save_path == '':
         raise ValueError('You need to pass a path to save the magnitude plot.')
-    
-    fig = plt.figure(figsize=figure_size)
+        
+    np.save(save_path + ".npy", magnitudes)
+        
+    fig = plt.figure(figsize=figure_size, dpi=150)
     ax = fig.add_subplot(111)
     
     if title != '':
         ax.set_title(title)
         
-    plt.imshow(magnitudes)
+    plt.imshow(magnitudes.T)
     fig.savefig(save_path)
     plt.close(fig) 

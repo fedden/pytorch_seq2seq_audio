@@ -5,6 +5,8 @@
 *.WAVE
 *.mp3
 
+*.tar.gz
+*.zip
 
 *.json
 *.pytorch
