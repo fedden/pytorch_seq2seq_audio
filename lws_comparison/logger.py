@@ -10,7 +10,7 @@ class TrainLogger():
         self.reset()
     
     def reset(self):
-        self.epoch_mean = 0.0
+        self.total_loss = 0.0
         self.current_batch = 0
         self.time_elapsed = 0
         
@@ -25,12 +25,13 @@ class TrainLogger():
         self.minutes, self.seconds = divmod(time_left_secs, 60)
         self.current_batch += 1
         self.loss = loss
+        self.total_loss += loss
         self.print()
         
     def print(self):
         if self.current_batch >= self.size_of_dataset:
             epoch_str = "epoch {:d}/{:d}, average loss {:.2f}" + (" " * 50)
-            epoch_str = epoch_str.format(self.epoch, self.number_epochs, self.epoch_mean)
+            epoch_str = epoch_str.format(self.epoch, self.number_epochs, self.total_loss / self.current_batch)
             print(epoch_str)
             self.epoch += 1
             self.reset()
