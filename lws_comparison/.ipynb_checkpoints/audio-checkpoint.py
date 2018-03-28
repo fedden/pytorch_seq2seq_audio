@@ -1,3 +1,4 @@
+from augmentor import OnlineAudioAugmentor
 from model import to_var
 import numpy as np
 import librosa
@@ -150,7 +151,6 @@ def magnitudes_to_audio(magnitudes, settings, dataset, phase_estimation_type):
         else:
             predicted_audio = librosa.istft(predicted_stfts.T, 
                                             hop_length=settings.hop_length)
-        
     return predicted_audio
     
 
@@ -158,13 +158,26 @@ class AudioDataset():
     """A class to convert audio found at an url to magnitude frames."""
 
     def __init__(self, settings, limit=None):
+        
+        # Creating an augmentor for data augmention.
+        augmentive_prob = 0.5
+        
+        if settings.augmentions:
+            self.augmentor = OnlineAudioAugmentor()
+            self.augmentor.additive_noise(augmentive_prob, 0.1)
+            self.augmentor.multiplacative_noise(augmentive_prob, 0.1)
+            self.augmentor.random_masking(augmentive_prob, 0.5)
+            self.augmentor.random_occlusion(augmentive_prob, 0.0, 0.5)
+        else:
+            self.augmentor = None
 
+        # Creating the dataset.
         self.fft_size = settings.fft_size
         self.feature_size = (settings.fft_size // 2) + 1
         self.hop_length = settings.hop_length
         self.base_epoch = settings.epoch
 
-        self.data, self.sample_rate = librosa.load(settings.path, mono=True)
+        self.data, self.sample_rate = librosa.load(settings.path, sr=None, mono=True)
         if limit is not None:
             self.data = self.data[:limit * self.sample_rate]
             
@@ -185,11 +198,8 @@ class AudioDataset():
             self.magnitudes, _ = librosa.magphase(self.stfts.T)
 
         self.dataset_size = len(self.magnitudes) - settings.sequence_length * 2 - 1
-        input_shape = (self.dataset_size, settings.sequence_length, self.feature_size)
-        target_shape = input_shape
         self.batch_size = settings.batch_size
-        self.x = np.zeros(input_shape, dtype=np.float32)
-        self.y = np.zeros(target_shape, dtype=np.float32)
+        self.sequence_length = settings.sequence_length
         
         if settings.overlap_ratio < 0.0 or settings.overlap_ratio > 1.0:
             message = '''Keep overlap percentage between zero and one.
@@ -198,27 +208,45 @@ class AudioDataset():
             '''
             raise ValueError(message)
             
-        self.offset = int(settings.sequence_length * settings.overlap_ratio)
+        self.offset = int(self.sequence_length * settings.overlap_ratio)
+        indices = np.random.permutation(self.dataset_size)[:self.batch_size]
+        start_sequences, _ = self.create_batch(indices)
+        self.start_sequences = to_var(torch.from_numpy(start_sequences))
 
-        for i, x_start in enumerate(range(0, self.dataset_size)):
-            x_end = x_start + settings.sequence_length
+        
+    def __len__(self):
+        return (self.dataset_size - self.batch_size) // self.batch_size
+
+
+    def create_batch(self, batch_indices):
+        shape = (self.batch_size, self.sequence_length, self.feature_size)
+        batch_x = np.zeros(shape, dtype=np.float32)
+        batch_y = np.zeros(shape, dtype=np.float32)
+
+        for i, x_start in enumerate(batch_indices):
+            x_end = x_start + self.sequence_length
             y_start = x_end - self.offset
-            y_end = y_start + settings.sequence_length
+            y_end = y_start + self.sequence_length
 
-            self.x[i] = self.magnitudes[x_start:x_end]
-            self.y[i] = self.magnitudes[y_start:y_end]
-
+            batch_x[i] = self.magnitudes[x_start:x_end]
+            batch_y[i] = self.magnitudes[y_start:y_end]
+        return batch_x, batch_y
+        
+                
     def get_next_batch(self, amount_epochs):
 
         for epoch in range(amount_epochs):
-
-            permuation = np.random.permutation(len(self.x))
-            x, y = self.x[permuation], self.y[permuation]
-
-            for start in range(0, len(x) - self.batch_size, self.batch_size):
+            
+            indices = np.random.permutation(self.dataset_size)
+            for start in range(0, self.dataset_size - self.batch_size, self.batch_size):
                 end = start + self.batch_size
+                
+                batch_x, batch_y = self.create_batch(indices[start:end])
+                
+                if self.augmentor is not None:
+                    batch_x = self.augmentor.augment(batch_x)
 
-                batch_x = torch.from_numpy(x[start:end])
-                batch_y = torch.from_numpy(y[start:end])
+                batch_x = torch.from_numpy(batch_x)
+                batch_y = torch.from_numpy(batch_y)
 
                 yield to_var(batch_x), to_var(batch_y), epoch + self.base_epoch

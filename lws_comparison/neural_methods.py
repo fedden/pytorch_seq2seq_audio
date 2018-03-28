@@ -2,6 +2,7 @@ import os
 import torch
 import torch.nn as nn
 import numpy as np
+from logger import TrainLogger
 from torch.autograd import Variable
 from model import EncoderRNN, AttentionDecoderRNN
 
@@ -112,22 +113,18 @@ def train(encoder,
           settings,
           criterion):
     
-    previous_epoch = settings.epoch
+    log = TrainLogger(len(dataset), previous_epoch, settings.number_epochs)
+    
     for x, y, epoch in dataset.get_next_batch(settings.number_epochs):
         
-        loss = train_batch(encoder, decoder, encoder_optimiser, 
-                     decoder_optimiser, x, y, criterion, 5.0)
-        settings.epoch = epoch
-        settings.loss = loss
-
-        if settings.epoch != previous_epoch:
-            previous_epoch = settings.epoch
-            print('')
-        else:
-            epoch_str = "epoch {}/{}, loss {}     "
-            print(epoch_str.format(epoch, settings.number_epochs, loss), end="\r")
-
-
+        log.start_iteration()
+        loss = train_batch(encoder, decoder,
+                           encoder_optimiser, 
+                           decoder_optimiser, 
+                           x, y, criterion, 5.0)
+        log.end_iteration(loss)
+    
+    
 def inference(encoder,
               decoder,
               start_sequences,

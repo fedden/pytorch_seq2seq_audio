@@ -73,6 +73,8 @@ class Settings():
         # Set this to have the program output more verbosely.
         self.verbose = args['verbose']
         
+        self.augmentions = args['augmentions']
+        
         # Set this to have the program plot the generated magnitude spectrum.
         self.plot_magnitude_spectrum = args['plot_magnitude_spectrum']
         

@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', required=True)
 parser.add_argument('--sanity_check', action='store_true')
 parser.add_argument('--verbose', action='store_true')
+parser.add_argument('--augmentions', action='store_true')
 parser.add_argument('--audio_path', required=True)
 parser.add_argument('--load_path')
 parser.add_argument('--save_path')
@@ -75,10 +76,6 @@ with torch.cuda.device(settings.cuda_device):
             print('Saving model in {}'.format(settings.save_path))
         
         save_model(settings, encoder, decoder)
-
-    # Inference, first get random starting points for the model.
-    indices = np.random.permutation(dataset.dataset_size)[:settings.batch_size]
-    start_sequences = to_var(torch.from_numpy(dataset.x[indices]))
     
     if settings.verbose:
         print('Starting inference.')
@@ -86,7 +83,7 @@ with torch.cuda.device(settings.cuda_device):
     # Run inference and get an array of magnitudes.
     predicted_batch = inference(encoder, 
                                 decoder, 
-                                start_sequences, 
+                                dataset.start_sequences, 
                                 settings.inference_length, 
                                 init_hidden_once=True)
     magnitudes = predicted_batch[0]
