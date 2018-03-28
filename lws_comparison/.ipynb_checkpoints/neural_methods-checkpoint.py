@@ -113,9 +113,9 @@ def train(encoder,
           settings,
           criterion):
     
-    log = TrainLogger(len(dataset), previous_epoch, settings.number_epochs)
+    log = TrainLogger(len(dataset), settings.epoch, settings.number_epochs)
     
-    for x, y, epoch in dataset.get_next_batch(settings.number_epochs):
+    for x, y in dataset.get_next_batch(settings.number_epochs):
         
         log.start_iteration()
         loss = train_batch(encoder, decoder,

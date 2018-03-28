@@ -235,7 +235,7 @@ class AudioDataset():
                 
     def get_next_batch(self, amount_epochs):
 
-        for epoch in range(amount_epochs):
+        for _ in range(amount_epochs):
             
             indices = np.random.permutation(self.dataset_size)
             for start in range(0, self.dataset_size - self.batch_size, self.batch_size):
@@ -249,4 +249,4 @@ class AudioDataset():
                 batch_x = torch.from_numpy(batch_x)
                 batch_y = torch.from_numpy(batch_y)
 
-                yield to_var(batch_x), to_var(batch_y), epoch + self.base_epoch
+                yield to_var(batch_x), to_var(batch_y)

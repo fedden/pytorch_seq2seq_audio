@@ -1,34 +1,38 @@
 #!/bin/sh
 
-python -W ignore main.py \
-    --verbose \
-    --augmentions \
-    --epochs 20 \
-    --audio_path audio_datasets/drums_original.wav \
-    --save_path augmented_drums_original \
-    --overlap_ratio 0.0 \
-    --fft_size 2048 \
-    --use_lws_mags True \
-    --phase_estimation_methods lws griffin_lim vocoder \
-    --griffin_lim_iterations 100 \
-    --perfect_reconstruction True \
-    --lws_mode music \
-    --cuda_device 1
+# python -W ignore main.py \
+#     --verbose \
+#     --augmentions \
+#     --epochs 20 \
+#     --audio_path audio_datasets/drums_original.wav \
+#     --save_path augmented_drums_original \
+#     --overlap_ratio 0.0 \
+#     --fft_size 2048 \
+#     --use_lws_mags True \
+#     --phase_estimation_methods lws griffin_lim vocoder \
+#     --griffin_lim_iterations 100 \
+#     --perfect_reconstruction True \
+#     --lws_mode music \
+#     --cuda_device 1
     
-python -W ignore main.py \
-    --verbose \
-    --augmentions \
-    --epochs 20 \
-    --audio_path audio_datasets/piano_original.wav \
-    --save_path augmented_piano_original \
-    --overlap_ratio 0.0 \
-    --fft_size 2048 \
-    --use_lws_mags True \
-    --phase_estimation_methods lws griffin_lim vocoder \
-    --griffin_lim_iterations 100 \
-    --perfect_reconstruction True \
-    --lws_mode music \
-    --cuda_device 1   
+# ./push_to_drive.sh
+    
+# python -W ignore main.py \
+#     --verbose \
+#     --augmentions \
+#     --epochs 20 \
+#     --audio_path audio_datasets/piano_original.wav \
+#     --save_path augmented_piano_original \
+#     --overlap_ratio 0.0 \
+#     --fft_size 2048 \
+#     --use_lws_mags True \
+#     --phase_estimation_methods lws griffin_lim vocoder \
+#     --griffin_lim_iterations 100 \
+#     --perfect_reconstruction True \
+#     --lws_mode music \
+#     --cuda_device 1  
+    
+# ./push_to_drive.sh 
     
 python -W ignore main.py \
     --verbose \
@@ -45,6 +49,8 @@ python -W ignore main.py \
     --lws_mode music \
     --cuda_device 1
     
+./push_to_drive.sh
+    
 python -W ignore main.py \
     --verbose \
     --augmentions \
@@ -60,6 +66,8 @@ python -W ignore main.py \
     --lws_mode music \
     --cuda_device 1
     
+./push_to_drive.sh
+    
 python -W ignore main.py \
     --verbose \
     --augmentions \
@@ -74,6 +82,8 @@ python -W ignore main.py \
     --perfect_reconstruction True \
     --lws_mode music \
     --cuda_device 1
+    
+./push_to_drive.sh
 
 
 
@@ -103,6 +113,8 @@ python -W ignore main.py \
     --lws_mode music \
     --cuda_device 1
     
+./push_to_drive.sh
+    
 python -W ignore main.py \
     --verbose \
     --epochs 20 \
@@ -115,7 +127,9 @@ python -W ignore main.py \
     --griffin_lim_iterations 100 \
     --perfect_reconstruction True \
     --lws_mode music \
-    --cuda_device 1   
+    --cuda_device 1
+    
+./push_to_drive.sh   
     
 python -W ignore main.py \
     --verbose \
@@ -131,6 +145,8 @@ python -W ignore main.py \
     --lws_mode music \
     --cuda_device 1
     
+./push_to_drive.sh
+    
 python -W ignore main.py \
     --verbose \
     --epochs 20 \
@@ -145,6 +161,8 @@ python -W ignore main.py \
     --lws_mode music \
     --cuda_device 1
     
+./push_to_drive.sh
+    
 python -W ignore main.py \
     --verbose \
     --epochs 20 \
@@ -158,6 +176,8 @@ python -W ignore main.py \
     --perfect_reconstruction True \
     --lws_mode music \
     --cuda_device 1
+    
+./push_to_drive.sh
 
 
 
